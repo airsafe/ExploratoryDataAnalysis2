@@ -8,7 +8,7 @@
 # Column 4 is the emissions in tons (2,648,767),
 # Column 5 the source type (4), and 
 # Column 6 is the year (4)
-
+#
 # Objective is total pollutants for each of the four years covered, so must do R function that gets 
 #   totals for each unique year.
 

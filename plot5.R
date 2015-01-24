@@ -61,8 +61,8 @@ rev_desc10 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = 
 #  For column 10, all relvant rows duplicated in 3, 4, 8 or 9
 #    Column 10 indicated 14 relevant SCC rows in column 10, but only for SCC rows > 2500
 
-----
-  # Looked for the rows with 'motor' or 'vehicle' in columns 3,4,8,9, and 10
+
+# Looked for the rows with 'motor' or 'vehicle' in columns 3,4,8,9, and 10
 SCC_mv3 <- as.character(grep("motor|vehicle",SCC[,3], ignore.case = TRUE)) # 378 found
 SCC_mv4 <- as.character(grep("motor|vehicle",SCC[,4], ignore.case = TRUE)) # 1138 found
 SCC_mv8 <- as.character(grep("motor|vehicle",SCC[,8], ignore.case = TRUE)) # 1452 found

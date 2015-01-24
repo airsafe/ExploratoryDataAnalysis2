@@ -30,7 +30,7 @@ library(ggplot2)
 
 # Can use the base function grep to find character string matches.
 # From results from running 'grep' on SCC table, can find from SCC codes in NEI are associated with motor vehicles.
-
+#
 # What are the relevant motor vechicle SCC codes? Inspected SCC file to look for key terms.
 # Searched 14 of 15 columns of SCC (left out column 1 with SCC codes) to review the unique values in each column
 

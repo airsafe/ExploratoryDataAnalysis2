@@ -11,7 +11,7 @@
 # Column 4 is the emissions in tons (2,648,767),
 # Column 5 the source type (4), and 
 # Column 6 is the year (4)
-
+#
 # Can load the ggplot2 RStudio package, which allow easy comparison of subsets of a dataset.
 # The basic plotting function is qplot where x-axis is years and y-axis cumulative emmissions
 # Data will be the part of NEI that is both associated with Baltimore City 

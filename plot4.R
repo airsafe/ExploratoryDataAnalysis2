@@ -10,7 +10,7 @@
 # Column 6 is the year (4)
 # Objective is total pollutants for each of the four years covered, so must do R function that gets 
 #   totals for each unique year.
-
+#
 # First, get the data
 NEI <- readRDS("summarySCC_PM25.rds")
 SCC <- readRDS("Source_Classification_Code.rds")
