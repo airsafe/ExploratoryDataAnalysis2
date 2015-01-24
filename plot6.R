@@ -1,0 +1,186 @@
+# Part 6 of Project 2 requires an output of a PNG plot that compares emissions from motor vehicle 
+#  sources in Los Angeles County, California (fips = "06037") with motor vehicle emissions from
+#  motor vehicle sources in Baltimore City, MD (fips = "24510").
+
+# Unique values in the NEI table are as follow:
+# Column 1 is the county [fips] (3263)
+# Column 2 is the SCC codes for the source (5,386), 
+# Column 3 is the aggregate pollutant (1), 
+# Column 4 is the emissions in tons (2,648,767),
+# Column 5 the source type (4), and 
+# Column 6 is the year (4)
+# Objective is total pollutants for each of the four years covered, so must do R function that gets 
+#   totals for each unique year.
+
+# First, get the data
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
+
+# Can load the ggplot2 RStudio package, which allow easy comparison of subsets of a dataset.
+# The basic plotting function is qplot where x-axis is years and y-axis cumulative emmissions
+# Motor vehicle data in the portion of the NEI table represented by mv_sums  has both Baltimore City 
+#  Los Angeles County data can be compared side-by-side in a bar graph. In ggplot2, observations 
+#  are represented by geoms, or geometric objects, (in this case, geom_bar for bars), there is a statistical transformation (sum),
+#  and another column (in this case fips) can be used to compare subsets of the data. 
+#  The subsets are the fips codes associated with Los Angeles County and Baltimore City.
+#  The resulting graph compares the motor vehicle pollution emissions for the two areas.
+
+install.packages("ggplot2")
+library(ggplot2)
+
+# Can use the base function grep to find character string matches.
+# From results from running 'grep' on SCC table, can find from SCC codes in NEI are associated with motor vehicles.
+
+# What are the relevant motor vechicle SCC codes? Inspected SCC file to look for key terms.
+# Searched 14 of 15 columns of SCC (left out column 1 with SCC codes) to review the unique values in each column
+
+unique_values <- NULL
+SCC_names <- names(SCC)
+for (i in 2:ncol(SCC)){
+  next_row <- NULL
+  next_row <-c(as.character(i),SCC_names[i],  as.character(length(unique(SCC[,i]))),typeof(SCC[,i])    )
+  unique_values <- rbind(unique_values,next_row)
+}
+colnames(unique_values) <- c("Column Number","Column Name","Unique Values","Type of data")
+rownames(unique_values) <- NULL
+# The above produced a listing of the number of unique values in columns 2-14
+
+# Below, searched for 'motor' or 'vehicle' variations in SCC columns 2-14, 
+#  and found in columns 3, 4, 8, 9, and 10
+#  peformed combinations and found that using (vechicle OR motor) got the desired response
+# for (i in 2:ncol(SCC)){
+# # word_find <-grep("motor|motors|vehicle|vehicles",SCC[,i], ignore.case = TRUE) # All
+# # word_find <-grep("motor|vehicle",SCC[,i], ignore.case = TRUE) # No plurals
+# # word_find <-grep("motor",SCC[,i], ignore.case = TRUE) # motor only
+# word_find <-grep("vehicle",SCC[,i], ignore.case = TRUE) # vehicle only
+# if (length(word_find)>0){  
+# print(c(any(word_find),length(word_find),"events in column",i ))}
+# }
+
+# Got a vector of values for each of the five columns of interest (columns columns 3, 4, 8, and 10,)
+rev_desc3 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE)),3]))
+rev_desc4 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TRUE)),4]))
+rev_desc8 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE)),8]))
+rev_desc9 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE)),9]))
+rev_desc10 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE)),10]))
+
+# After reviewing the above vectors, all of the following columns identified relevant SCC rows: columns 3,4, 8, 9
+#   Total rows in each data.frame were:
+#       rev_desc3 (378)
+#       rev_desc4 (1138)
+#       rev_desc8 (1452)
+#       rev_desc9 (664)
+#       rev_desc10 (30)
+#  For column 10, all relvant rows duplicated in 3, 4, 8 or 9
+#    Column 10 indicated 14 relevant SCC rows in column 10, but only for SCC rows > 2500
+
+  # Looked for the rows with 'motor' or 'vehicle' in columns 3,4,8,9, and 10
+SCC_mv3 <- as.character(grep("motor|vehicle",SCC[,3], ignore.case = TRUE)) # 378 found
+SCC_mv4 <- as.character(grep("motor|vehicle",SCC[,4], ignore.case = TRUE)) # 1138 found
+SCC_mv8 <- as.character(grep("motor|vehicle",SCC[,8], ignore.case = TRUE)) # 1452 found
+SCC_mv9 <- as.character(grep("motor|vehicle",SCC[,9], ignore.case = TRUE)) # 664 found
+SCC_mv10 <- as.character(grep("motor|vehicle",SCC[,10], ignore.case = TRUE)) # 30 found, only last 14 relevant
+mv_concat <- c(SCC_mv3, SCC_mv4, SCC_mv8, SCC_mv9,SCC_mv10[-c(1:16)])
+# mv_concat has potentially many duplicates length(mv_concat) = 3632 
+
+# First sorted the row numbers, then got rid of duplicates
+mv_concat_sorted <- sort(mv_concat)
+mv_unique_rows <- unique(mv_concat_sorted) # 1,498 found among 11,717 SCC rows
+
+# Now get the SCC codes for rows with 'motor' or 'vechicle' in columns 3, 4, 9, or 10
+# Made SCC_mv_IDs as character to match the type of the SCC column in 
+#  NEI data frame (in vector SCC_mv_IDs below)
+SCC_mv_IDs <- sort(as.character(SCC[c(mv_unique_rows),1]))
+
+# The NEI table about 6.5 million rows, most of which are not relevant to objective of 
+#   showing the total PM2.5 emission from motor vehicle sources in Baltimore City, MD,
+#   (fips = "24510") with motor vehicle sources in Los Angeles County, California (fips = "06037").
+
+#   To the next step is to subject only the Baltimore City and Los Angeles Count related parts 
+#   of the NEI table to further analysis. That can be done by first identifying the rows of the NEI
+#   table with the relevant fips values of "06037" or "24510".
+
+NEI_bal_city <- NEI[NEI[,1]=="24510",]  # There were 2096 rows associated with Baltimore City.
+NEI_lax <- NEI[NEI[,1]=="06037",]  # There were 9320 rows associated with Los Angeles County.
+NEI_both <- NEI[(NEI[,1]=="06037")|(NEI[,1]=="24510"),]  # There were 11,416 rows associated with the two areas.
+
+# Now get the NEI rows matching associated with the relvant SCC codes identified earlier.
+# There were 1,498 found earlier that were placed in the 'mv_unique_rows' vector
+
+NEI_bal_city_IDs <- NEI_bal_city[,2]
+NEI_lax_IDs <- NEI_lax[,2]
+NEI_both_IDs <- NEI_both[,2]
+
+# Tests below was to find number of matches betwen SCC codes from the SCC_mv_IDs vector
+#   and the Baltimore City and Los Angeles County SCC IDs in NEI_bal_city_IDs.
+#   There were 492 found for Baltimore and 663 for Los Angeles County
+#   There was some overlap, so the total between the two areas was 716
+# cnt <- 0
+# for (i in 1:length(mv_unique_rows)){
+#   if( any(NEI_bal_city_IDs==SCC_mv_IDs[i]) ){cnt<-cnt+1}
+# }
+# cnt
+# 
+# cntlax <- 0
+# for (i in 1:length(mv_unique_rows)){
+#   if( any(NEI_lax_IDs==SCC_mv_IDs[i]) ){cntlax<-cntlax+1}
+# }
+# cntlax
+# cnt <- 0
+# for (i in 1:length(mv_unique_rows)){
+#   if( any(NEI_bal_city_IDs==SCC_mv_IDs[i]) ){cnt<-cnt+1}
+# }
+# cnt
+# 
+# cntboth <- 0
+# for (i in 1:length(mv_unique_rows)){
+#   if( any(NEI_both_IDs==SCC_mv_IDs[i]) ){cntboth<-cntboth+1}
+# }
+# cntboth
+
+# The total number of motor vehicle related rows in NEI for the two areas is computed below (2,723 total)
+mv_rows <- NULL
+for (i in 1:length(mv_unique_rows)){
+  if( any( NEI_both[,2]==SCC_mv_IDs[i]  )  ){
+    mv_rows <- rbind(mv_rows, NEI_both[NEI_both[,2]==SCC_mv_IDs[i],])
+  }
+}
+
+# Running length(unique(mv_rows[,2])) also gives 716 unique values in NEI table
+
+# Column 4 has pollutant values, and column 6 the year, so can do a split in combination with sapply 
+# on the list created by split(mv_rows[,4],mv_rows[,6] to get a sum by year
+
+mv_sums <- sapply(split(mv_rows[4],mv_rows[,6]),sum)
+
+# For building the graph, used as reference http://www.cookbook-r.com/Graphs/Bar_and_line_graphs_(ggplot2)/
+
+# x-axis: NEI_both[,6]
+# y-axis: NEI_both[,4]
+# Pollutions type:  NEI_both[,5] 
+
+# Test print plot in section below
+# ggplot(data=NEI_both, aes(x=NEI_both[,6], y=NEI_both[,4]/10^3)) + 
+#   geom_bar(aes(fill=NEI_both[,1]), stat="identity", position=position_dodge()) +
+#   scale_fill_manual(values=c("blue","black"),labels=c("LA County", "Baltimore City")) + 
+#   labs(title = "Comparison of Baltimore City, MD and Los Angeles County \nmotor vehicle-related PM2.5 emissions for selected years") + labs(fill="Urban Area") +
+#   xlab("Year")+ ylab("Pollution in millions of tons") +
+#   scale_x_continuous(breaks=c(1999,2002,2005,2008)) 
+
+# Note: If command line is long, leave an operator or open bracket at the end of the line
+# But need to do compare for each of the four variations of the 'type' variable (column 5) 
+# Variations are "POINT"    "NONPOINT" "ON-ROAD"  "NON-ROAD"
+
+# Below is the same plot output to working directory in PNG format
+par(mfrow=c(1,1)) # Ensure full sized graphic
+png(file = "plot6.png", width = 480, height = 480) # Open PNG device to place output in working directory
+ggplot(data=NEI_both, aes(x=NEI_both[,6], y=NEI_both[,4]/10^3)) + 
+  geom_bar(aes(fill=NEI_both[,1]), stat="identity", position=position_dodge()) +
+  scale_fill_manual(values=c("blue","black"),labels=c("LA County", "Baltimore City")) + 
+  labs(title = "Comparison of Baltimore City, MD and Los Angeles County \nmotor vehicle-related PM2.5 emissions for selected years") + labs(fill="Urban Area") +
+  xlab("Year")+ ylab("Pollution in millions of tons") +
+  scale_x_continuous(breaks=c(1999,2002,2005,2008)) 
+dev.off() # Close the PNG device
+
+
+
