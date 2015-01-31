@@ -1,0 +1,24 @@
+# Part 2 of Project 2 requires an output of a PNG plot using base plotting 
+# system in R that shows the total PM2.5 emission from Baltimore City,
+# Maryland(fips = "24510") for each of the years 1999, 2002, 2005, and 2008.
+
+# First step was to get the data
+
+NEI <- readRDS("summarySCC_PM25.rds")
+
+# Next step is to extract only those rows associated with Baltimore City, MD (fips == "24510")
+
+NEI_bal_city <- NEI[NEI[,1]=="24510",]
+
+# Column 4 has pollutant values, and column 6 the year, so can do a split in combination with sapply 
+
+NEI_bal_city_sums <- sapply(split(NEI_bal_city[4],NEI_bal_city[,6]),sum)
+
+# Because the y-axis values (emissions in tons) is in the thousands, divided the values by one thousands (10^3)
+
+# Below is the  plot output to working directory in PNG format
+par(mfrow=c(1,1)) # Ensure full sized graphic
+png(file = "plot2.png", width = 480, height = 480) # Open PNG device to place output in working directory
+
+barplot(NEI_bal_city_sums/10^3, xlab="Year", ylab="Pollution in thousands of tons", col="blue", main="Selected years of Baltimore City, MD PM2.5 emissions")
+dev.off() # Close the PNG device

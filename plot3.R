@@ -21,13 +21,14 @@
 #  In this case the variable 'type' had four categories, and the resulting graph was compared each of 
 #  those four variations in a bar graph.
 
-# Next step is to install ggplot2
-install.packages("ggplot2")
-library(ggplot2)
-
 
 # First step was to get the data
 NEI <- readRDS("summarySCC_PM25.rds")
+
+
+# Next step is to install ggplot2 in RStudio
+install.packages("ggplot2")
+library(ggplot2)
 
 # Also need SCC <- readRDS("Source_Classification_Code.rds") to map some data names to data codes
 # Column 4 has pollutant values, and column 6 the year, so can do a split in combination with sapply 

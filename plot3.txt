@@ -1,0 +1,31 @@
+# Part 3 of Project 2 requires an output of a PNG plot using ggplot2 plotting system in R
+#   that shows the total PM2.5 emission fromBaltimore City, Maryland (fips = "24510") by year
+#   for the years 1999, 2002, 2005, and 2008. The graphic should compare the pollution from four types
+#   of sources indicated by the type variable (point, nonpoint, onroad, nonroad) variable in order
+#   to see which of these four sources have seen decreases.
+
+# First step was to get the data
+NEI <- readRDS("summarySCC_PM25.rds")
+
+# Next step is to install ggplot2 in RStudio
+install.packages("ggplot2")
+library(ggplot2)
+
+# Also need SCC <- readRDS("Source_Classification_Code.rds") to map some data names to data codes
+# Column 4 has pollutant values, and column 6 the year, so can do a split in combination with sapply 
+# on the list created by split(NEI[4],NEI$year to get a sum by year
+
+# Next step is to extract only those rows associated with Baltimore City, MD (fips == "24510")
+
+NEI_bal_city <- NEI[NEI[,1]=="24510",]
+
+# Plot of data output to working directory in PNG format
+par(mfrow=c(1,1)) # Ensure full sized graphic
+png(file = "plot3.png", width = 480, height = 480) # Open PNG device to place output in working directory
+ggplot(data=NEI_bal_city, aes(x=NEI_bal_city[,6], y=NEI_bal_city[,4]/10^3)) + 
+  geom_bar(aes(fill=NEI_bal_city[,5]), stat="identity", position=position_dodge()) +
+  scale_fill_manual(values=c("black", "blue","red", "green")) + 
+  labs(title = "Selected years of Baltimore City, MD PM2.5 emissions by type") + labs(fill="Type") +
+  xlab("Year")+ ylab("Pollution in millions of tons") +
+  scale_x_continuous(breaks=c(1999,2002,2005,2008)) 
+dev.off() # Close the PNG device

@@ -58,13 +58,13 @@ rownames(unique_values) <- NULL
 # }
 
 # Got a vector of values for each of the five columns of interest (columns columns 3, 4, 8, and 10,)
-rev_desc3 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE)),3]))
-rev_desc4 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TRUE)),4]))
-rev_desc8 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE)),8]))
-rev_desc9 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE)),9]))
-rev_desc10 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE)),10]))
+# rev_desc3 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE)),3]))
+# rev_desc4 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TRUE)),4]))
+# rev_desc8 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE)),8]))
+# rev_desc9 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE)),9]))
+# rev_desc10 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE)),10]))
 
-# After reviewing the above vectors, all of the following columns identified relevant SCC rows: columns 3,4, 8, 9
+# After reviewing the above vectors, all of the following columns identified relevant SCC rows: columns 3,4, 8, 9, and 10
 #   Total rows in each data.frame were:
 #       rev_desc3 (378)
 #       rev_desc4 (1138)
@@ -74,7 +74,10 @@ rev_desc10 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = 
 #  For column 10, all relvant rows duplicated in 3, 4, 8 or 9
 #    Column 10 indicated 14 relevant SCC rows in column 10, but only for SCC rows > 2500
 
-  # Looked for the rows with 'motor' or 'vehicle' in columns 3,4,8,9, and 10
+
+# After reviewing the above vectors, when columns 3,4,8, and 9 contained the words ‘motor’ or ‘vehicle,'
+#     the SCC code for that row was relevant to this analysis. 
+#     For column 10, the SCC code was relevant only if it was higher than row 2500.
 SCC_mv3 <- as.character(grep("motor|vehicle",SCC[,3], ignore.case = TRUE)) # 378 found
 SCC_mv4 <- as.character(grep("motor|vehicle",SCC[,4], ignore.case = TRUE)) # 1138 found
 SCC_mv8 <- as.character(grep("motor|vehicle",SCC[,8], ignore.case = TRUE)) # 1452 found

@@ -1,0 +1,128 @@
+# Part 6 of Project 2 requires an output of a PNG plot that compares emissions from motor vehicle 
+#  sources in Los Angeles County, California (fips = "06037") with motor vehicle emissions from
+#  motor vehicle sources in Baltimore City, MD (fips = "24510").
+
+
+# First, get the data
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
+
+# Next, load the ggplot2 RStudio package, which allow easy comparison of subsets .
+
+install.packages("ggplot2")
+library(ggplot2)
+
+# Can use the base function grep to find character string matches.
+# From results from running 'grep' on SCC table, can find from SCC codes in NEI are associated with motor vehicles.
+#
+# What are the relevant motor vechicle SCC codes? Inspected SCC file to look for key terms.
+# Searched 14 of 15 columns of SCC (left out column 1 with SCC codes) to review the unique values in each column
+
+unique_values <- NULL
+SCC_names <- names(SCC)
+for (i in 2:ncol(SCC)){
+  next_row <- NULL
+  next_row <-c(as.character(i),SCC_names[i],  as.character(length(unique(SCC[,i]))),typeof(SCC[,i])    )
+  unique_values <- rbind(unique_values,next_row)
+}
+colnames(unique_values) <- c("Column Number","Column Name","Unique Values","Type of data")
+rownames(unique_values) <- NULL
+# The above produced a listing of the number of unique values in columns 2-14
+
+# Below, searched for 'motor' or 'vehicle' variations in SCC columns 2-14, 
+#  and found in columns 3, 4, 8, 9, and 10
+
+# After reviewing the above vectors, when columns 3,4,8, and 9 contained the words ‘motor’ or ‘vehicle,’ the SCC code for that row was relevant to this analysis. For column 10, the SCC code was relevant only if it was higher than row 2500.
+
+SCC_mv3 <- as.character(grep("motor|vehicle",SCC[,3], ignore.case = TRUE)) # 378 found
+SCC_mv4 <- as.character(grep("motor|vehicle",SCC[,4], ignore.case = TRUE)) # 1138 found
+SCC_mv8 <- as.character(grep("motor|vehicle",SCC[,8], ignore.case = TRUE)) # 1452 found
+SCC_mv9 <- as.character(grep("motor|vehicle",SCC[,9], ignore.case = TRUE)) # 664 found
+SCC_mv10 <- as.character(grep("motor|vehicle",SCC[,10], ignore.case = TRUE)) # 30 found, only last 14 relevant
+mv_concat <- c(SCC_mv3, SCC_mv4, SCC_mv8, SCC_mv9,SCC_mv10[-c(1:16)])
+
+# First sorted the row numbers, then got rid of duplicates
+mv_concat_sorted <- sort(mv_concat)
+mv_unique_rows <- unique(mv_concat_sorted) # 1,498 found among 11,717 SCC rows
+
+# Now get the SCC codes for rows with 'motor' or 'vechicle' in columns 3, 4, 9, or 10
+# Made SCC_mv_IDs as character to match the type of the SCC column in 
+#  NEI data frame (in vector SCC_mv_IDs below)
+SCC_mv_IDs <- sort(as.character(SCC[c(mv_unique_rows),1]))
+
+# The NEI table about 6.5 million rows, most of which are not relevant to objective of 
+#   showing the total PM2.5 emission from motor vehicle sources in Baltimore City, MD,
+#   (fips = "24510") with motor vehicle sources in Los Angeles County, California (fips = "06037").
+
+#   To the next step is to subject only the Baltimore City and Los Angeles Count related parts 
+#   of the NEI table to further analysis. That can be done by first identifying the rows of the NEI
+#   table with the relevant fips values of "06037" or "24510".
+
+NEI_bal_city <- NEI[NEI[,1]=="24510",]  # There were 2096 rows associated with Baltimore City.
+NEI_lax <- NEI[NEI[,1]=="06037",]  # There were 9320 rows associated with Los Angeles County.
+NEI_both <- NEI[(NEI[,1]=="06037")|(NEI[,1]=="24510"),]  # There were 11,416 rows associated with the two areas.
+
+# Now get the NEI rows matching associated with the relvant SCC codes identified earlier.
+
+NEI_bal_city_IDs <- NEI_bal_city[,2]
+NEI_lax_IDs <- NEI_lax[,2]
+NEI_both_IDs <- NEI_both[,2]
+
+# The total number of motor vehicle related rows in NEI for the two areas is computed below (2,723 total)
+mv_rows <- NULL
+for (i in 1:length(mv_unique_rows)){
+  if( any( NEI_both[,2]==SCC_mv_IDs[i]  )  ){
+    mv_rows <- rbind(mv_rows, NEI_both[NEI_both[,2]==SCC_mv_IDs[i],])
+  }
+}
+Load the Gross Domestic Product data for the 190 ranked countries in this data set: 
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FGDP.csv 
+
+Load the educational data from this data set: 
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FEDSTATS_Country.csv 
+
+Match the data based on the country shortcode. Of the countries for which the end of the fiscal year is available, how many end in June? 
+
+# Column 4 has pollutant values, and column 6 the year, so can do a split in combination with sapply 
+# on the list created by split(mv_rows[,4],mv_rows[,6] to get a sum by year
+
+mv_sums <- sapply(split(mv_rows[4],mv_rows[,6]),sum)
+
+# For building the graph, used as reference http://www.cookbook-r.com/Graphs/Bar_and_line_graphs_(ggplot2)/
+
+# Below is the plot output to working directory in PNG format
+par(mfrow=c(1,1)) # Ensure full sized graphic
+png(file = "plot6.png", width = 480, height = 480) # Open PNG device to place output in working directory
+ggplot(data=NEI_both, aes(x=NEI_both[,6], y=NEI_both[,4]/10^3)) + 
+  geom_bar(aes(fill=NEI_both[,1]), stat="identity", position=position_dodge()) +
+  scale_fill_manual(values=c("blue","black"),labels=c("LA County", "Baltimore City")) + 
+  labs(title = "Comparison of Baltimore City, MD and Los Angeles County \nmotor vehicle-related PM2.5 emissions for selected years") + labs(fill="Urban Area") +
+  xlab("Year")+ ylab("Pollution in millions of tons") +
+  scale_x_continuous(breaks=c(1999,2002,2005,2008)) 
+dev.off() # Close the PNG device
+
+
+http://www.videoconversionexperts.com/super-8-film-transfer.html
+Our intent was to have interest start 30 days in arrears from the 1st payment due date
+The American Community Survey distributes downloadable data about United States communities. Download the 2006 microdata survey about housing for the state of Idaho using download.file() from here: 
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv 
+and load the data into R. The code book, describing the variable names is here: 
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FPUMSDataDict06.pdf 
+
+
+Summitted 3/23/08
+ Confirmation Number 1733333
+TRA 602038174
+Period/Year  A/2005
+Date and Time Submitted 3823/08 1:55 AM
+Person Completing Return Todd Curtis
+
+Labor and Industries account #: 108-162-00
+
+---
+Express Filing (letter 3/24/08) account is activated
+Acct ID: 108,162-00 

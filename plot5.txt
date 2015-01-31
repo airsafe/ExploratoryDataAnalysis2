@@ -1,15 +1,4 @@
-# Part 5 of Project 2 requires an output of a PNG plot that shows the total PM2.5 emission from
-#  motor vehicle sources in Baltimore City, MD (fips = "24510").
-
-# Unique values in the NEI table are as follows:
-# Column 1 is the county [fips] (3263)
-# Column 2 is the SCC codes for the source (5,386), 
-# Column 3 is the aggregate pollutant (1), 
-# Column 4 is the emissions in tons (2,648,767),
-# Column 5 the source type (4), and 
-# Column 6 is the year (4)
-# Objective is total pollutants for each of the four years covered, so must do R function that gets 
-#   totals for each unique year.
+# Part 5 of Project 2 requires an output of a PNG plot that shows the total PM2.5 emission from motor vehicle sources in Baltimore City, MD (fips = "24510").
 
 # First, get the data
 NEI <- readRDS("summarySCC_PM25.rds")
@@ -34,15 +23,6 @@ rownames(unique_values) <- NULL
 
 # Below, searched for 'motor' or 'vehicle' variations in SCC columns 2-14, 
 #  and found in columns 3, 4, 8, 9, and 10
-#  peformed combinations and found that using (vechicle OR motor) got the desired response
-# for (i in 2:ncol(SCC)){
-# # word_find <-grep("motor|motors|vehicle|vehicles",SCC[,i], ignore.case = TRUE) # All
-# # word_find <-grep("motor|vehicle",SCC[,i], ignore.case = TRUE) # No plurals
-# # word_find <-grep("motor",SCC[,i], ignore.case = TRUE) # motor only
-# word_find <-grep("vehicle",SCC[,i], ignore.case = TRUE) # vehicle only
-# if (length(word_find)>0){  
-# print(c(any(word_find),length(word_find),"events in column",i ))}
-# }
 
 # Got a vector of values for each of the five columns of interest (columns columns 3, 4, 8, and 10,)
 rev_desc3 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,3], ignore.case = TRUE)),3]))
@@ -50,16 +30,6 @@ rev_desc4 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,4], ignore.case = TR
 rev_desc8 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,8], ignore.case = TRUE)),8]))
 rev_desc9 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,9], ignore.case = TRUE)),9]))
 rev_desc10 <-cbind(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE), as.character(SCC[c(grep("motor|motors|vehicle|vehicles",SCC[,10], ignore.case = TRUE)),10]))
-
-# After reviewing the above vectors, all of the following columns identified relevant SCC rows: columns 3,4, 8, 9
-#   Total rows in each data.frame were:
-#       rev_desc3 (378)
-#       rev_desc4 (1138)
-#       rev_desc8 (1452)
-#       rev_desc9 (664)
-#       rev_desc10 (30)
-#  For column 10, all relvant rows duplicated in 3, 4, 8 or 9
-#    Column 10 indicated 14 relevant SCC rows in column 10, but only for SCC rows > 2500
 
 
 # Looked for the rows with 'motor' or 'vehicle' in columns 3,4,8,9, and 10
@@ -84,22 +54,13 @@ SCC_mv_IDs <- sort(as.character(SCC[c(mv_unique_rows),1]))
 #   showing the total PM2.5 emission from motor vehicle sources in Baltimore City, MD,
 #   so the next step is to subject only the Baltimore City related part of the NEI
 #   table to further analysis. That can be done by first identifying the rows of the NEI
-#   table with the 'fips' value of "24510", which is the code for Baltimore City.
+#   table with the ‘fips’ value of "24510", which is the code for Baltimore City.
 
 NEI_bal_city <- NEI[NEI[,1]=="24510",]  # There were 2096 rows associated with Baltimore City.
 
 # Now get the NEI rows matching associated with the relvant SCC codes identified earlier.
-# There were 1,498 found earlier that were placed in the 'mv_unique_rows' vector
 
 NEI_bal_city_IDs <- NEI_bal_city[,2]
-
-# Test below was to find number of matches betwen SCC codes from the SCC_mv_IDs vector
-#   and the Baltimore City SCC IDs in NEI_bal_city_IDs, 492 found
-# cnt <- 0
-# for (i in 1:length(mv_unique_rows)){
-#   if( any(NEI_bal_city_IDs==SCC_mv_IDs[i]) ){cnt<-cnt+1}
-# }
-# cnt
 
 mv_rows <- NULL
 for (i in 1:length(mv_unique_rows)){
@@ -108,17 +69,12 @@ for (i in 1:length(mv_unique_rows)){
   }
 }
 
-# Running length(unique(mv_rows[,2])) also gives 492 unique values in
-
 # Column 4 has pollutant values, and column 6 the year, so can do a split in combination with sapply 
 # on the list created by split(mv_rows[,4],mv_rows[,6] to get a sum by year
 
 mv_sums <- sapply(split(mv_rows[4],mv_rows[,6]),sum)
 
-# Below is the test plot in RStudio
-# barplot(mv_sums/10^3, xlab="Year", ylab="Pollution in thousands of tons", col="blue", main="Selected years of Baltimore City, MD \nmotor vehicle-rleated PM2.5 emissions")
-
-# Below is the same plot output to working directory in PNG format
+# Below is the plot output to working directory in PNG format
 par(mfrow=c(1,1)) # Ensure full sized graphic
 png(file = "plot5.png", width = 480, height = 480) # Open PNG device to place output in working directory
 

@@ -42,7 +42,7 @@ NEI_bal_city_sums <- sapply(split(NEI_bal_city[4],NEI_bal_city[,6]),sum)
 # Tested by doing the total sums for column four, and equaled to the sums from the four years
 # Note: sum(NEI_bal_city_sums)-sum(NEI_bal_city[,4]) gave -1.818989e-12, but sum(NEI_bal_city_sums)==sum(NEI_bal_city[,4]) returns FALSE
 
-# Because the y-axis values (emissions in tons) is in the thousands, divided the values by one thousands (10^3)
+# Because the y-axis values (emissions in tons) is in the millions, divided the values by one million (10^6)
 
 # Below is the test in RStudio
 # barplot(NEI_bal_city_sums/10^3, xlab="Year", ylab="Pollution in thousands of tons", col="blue", main="Selected years of Baltimore City, MD PM2.5 emissions")
